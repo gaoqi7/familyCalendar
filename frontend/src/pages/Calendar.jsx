@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { apiDelete, apiGet, apiPatch, apiPost } from "../api.js";
+import usePoll from "../hooks/usePoll.js";
 
 const Calendar = () => {
   const { t } = useTranslation();
@@ -29,9 +30,7 @@ const Calendar = () => {
     setMembers(membersData);
   };
 
-  useEffect(() => {
-    load().catch(console.error);
-  }, []);
+  usePoll(load, 30000);
 
   const deriveRepeatUntil = (repeatRule, repeatUntil, endAt, startAt) => {
     if (repeatRule === "never") return null;

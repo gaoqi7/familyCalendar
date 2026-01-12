@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { apiGet, apiPost } from "../api.js";
+import usePoll from "../hooks/usePoll.js";
 
 const Habits = () => {
   const { t } = useTranslation();
@@ -18,9 +19,7 @@ const Habits = () => {
     setMembers(memberData);
   };
 
-  useEffect(() => {
-    load().catch(console.error);
-  }, []);
+  usePoll(load, 30000);
 
   const handleHabitSubmit = async (event) => {
     event.preventDefault();

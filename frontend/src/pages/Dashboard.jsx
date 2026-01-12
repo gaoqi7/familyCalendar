@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { apiDelete, apiGet, apiPatch, apiPost } from "../api.js";
+import usePoll from "../hooks/usePoll.js";
 
 const getMonthMatrix = (monthDate) => {
   const year = monthDate.getFullYear();
@@ -50,22 +51,27 @@ const Dashboard = () => {
     frequency: "daily"
   });
 
+  const load = async () => {
+    const [eventsData, habitsData, habitLogData, membersData] =
+      await Promise.all([
+        apiGet("/api/events"),
+        apiGet("/api/habits"),
+        apiGet("/api/habit-logs"),
+        apiGet("/api/members")
+      ]);
+    setEvents(eventsData);
+    setHabits(habitsData);
+    setHabitLogs(habitLogData);
+    setMembers(membersData);
+  };
+
+  usePoll(load, 30000);
+
   useEffect(() => {
-    const load = async () => {
-      const [eventsData, habitsData, habitLogData, membersData] =
-        await Promise.all([
-          apiGet("/api/events"),
-          apiGet("/api/habits"),
-          apiGet("/api/habit-logs"),
-          apiGet("/api/members")
-        ]);
-      setEvents(eventsData);
-      setHabits(habitsData);
-      setHabitLogs(habitLogData);
-      setMembers(membersData);
-    };
-    load().catch(console.error);
-  }, []);
+    window.dispatchEvent(
+      new CustomEvent("dayviewchange", { detail: { active: view === "day" } })
+    );
+  }, [view]);
 
   useEffect(() => {
     if (view !== "day") {
@@ -327,31 +333,6 @@ const Dashboard = () => {
         </div>
         <div className="day-layout">
           <div className="day-main">
-            <div className="day-actions mobile-only">
-              <button
-                type="button"
-                onClick={() => {
-                  setEventForm((prev) => ({
-                    ...prev,
-                    startAt: formatDateTimeLocal(selectedDate, 9),
-                    endAt: formatDateTimeLocal(selectedDate, 10)
-                  }));
-                  setShowEventForm((prev) => !prev);
-                }}
-              >
-                {t("calendar.addEvent")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowHabitForm((prev) => !prev)}
-              >
-                {t("habits.addHabit")}
-              </button>
-              <button type="button" onClick={() => setView("month")}>
-                {t("calendarMonth.back")}
-              </button>
-            </div>
-
             {showEventForm ? (
               <form className="card form" onSubmit={handleEventSubmit}>
             <div className="form-row">
@@ -552,7 +533,25 @@ const Dashboard = () => {
 
             <div className="day-sections">
               <div className="day-section">
-            <h2>{t("nav.calendar")}</h2>
+            <div className="section-header">
+              <h2>{t("nav.calendar")}</h2>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label={t("calendar.addEvent")}
+                onClick={() => {
+                  setEventForm((prev) => ({
+                    ...prev,
+                    startAt: formatDateTimeLocal(selectedDate, 9),
+                    endAt: formatDateTimeLocal(selectedDate, 10)
+                  }));
+                  setShowEventForm(true);
+                  setShowHabitForm(false);
+                }}
+              >
+                +
+              </button>
+            </div>
             <div className="day-list">
               {dayEvents.length === 0 ? (
                 <div className="card empty-state">
@@ -561,7 +560,7 @@ const Dashboard = () => {
               ) : (
                 Object.entries(groupedEvents).map(([memberId, items]) => (
                   <div key={memberId} className="member-group">
-                    <div className="member-badge">
+                    <div className="member-badge avatar-only">
                       {memberId !== "all" && memberAvatarMap[memberId] ? (
                         <img
                           src={`${apiBase}${memberAvatarMap[memberId]}`}
@@ -574,11 +573,6 @@ const Dashboard = () => {
                             .toUpperCase()}
                         </div>
                       )}
-                      <div className="member-name">
-                        {memberId === "all"
-                          ? t("common.all")
-                          : memberMap[memberId] || t("common.member")}
-                      </div>
                     </div>
                     <div className="member-events">
                       {items.map((event) => (
@@ -642,7 +636,20 @@ const Dashboard = () => {
             </div>
               </div>
               <div className="day-section">
-            <h2>{t("nav.habits")}</h2>
+            <div className="section-header">
+              <h2>{t("nav.habits")}</h2>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label={t("habits.addHabit")}
+                onClick={() => {
+                  setShowHabitForm(true);
+                  setShowEventForm(false);
+                }}
+              >
+                +
+              </button>
+            </div>
             <div className="habit-todo">
               {habits.map((habit) => {
                 const status = habitStatus.get(habit.id);
@@ -685,36 +692,6 @@ const Dashboard = () => {
             </div>
               </div>
             </div>
-          </div>
-          <div className="day-tags">
-            <button
-              type="button"
-              onClick={() => {
-                setEventForm((prev) => ({
-                  ...prev,
-                  startAt: formatDateTimeLocal(selectedDate, 9),
-                  endAt: formatDateTimeLocal(selectedDate, 10)
-                }));
-                setShowEventForm(true);
-                setShowHabitForm(false);
-              }}
-            >
-              {t("calendar.addEvent")}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowHabitForm(true);
-                setShowEventForm(false);
-              }}
-            >
-              {t("habits.addHabit")}
-            </button>
-            {(showEventForm || showHabitForm) ? (
-              <button type="button" onClick={() => setView("month")}>
-                {t("calendarMonth.back")}
-              </button>
-            ) : null}
           </div>
         </div>
         <div className="week-strip">

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { apiGet, apiPatch, apiPost, apiUpload } from "../api.js";
 import { setLanguage } from "../i18n.js";
+import usePoll from "../hooks/usePoll.js";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
@@ -34,9 +35,7 @@ const Settings = () => {
     setMembers(membersData);
   };
 
-  useEffect(() => {
-    load().catch(console.error);
-  }, []);
+  usePoll(load, 30000);
 
   useEffect(() => {
     if (!cameraOpen) {

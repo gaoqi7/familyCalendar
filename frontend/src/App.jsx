@@ -18,6 +18,7 @@ const App = () => {
   });
   const location = useLocation();
   const navigate = useNavigate();
+  const [dayViewActive, setDayViewActive] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("language");
@@ -41,6 +42,14 @@ const App = () => {
       .catch(() => {
         setAuthState({ loading: false, authenticated: false });
       });
+  }, []);
+
+  useEffect(() => {
+    const handler = (event) => {
+      setDayViewActive(Boolean(event.detail?.active));
+    };
+    window.addEventListener("dayviewchange", handler);
+    return () => window.removeEventListener("dayviewchange", handler);
   }, []);
 
   if (authState.loading) {
@@ -78,7 +87,7 @@ const App = () => {
             <path d="M7.4 6.4L2 11.8l5.4 5.4 1.4-1.4-3-3H22v-2H5.8l3-3-1.4-1.4Z" />
           </svg>
         </button>
-      ) : (
+      ) : dayViewActive ? null : (
         <NavLink to="/settings" className="settings-fab" aria-label={t("nav.settings")}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 8.5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 0 0 0-7Zm8.6 3.5c0-.5-.04-1-.12-1.47l-2.2-.34a6.8 6.8 0 0 0-.84-2.02l1.33-1.79a9.3 9.3 0 0 0-2.08-2.08l-1.79 1.33c-.64-.36-1.33-.64-2.02-.84l-.34-2.2A8.7 8.7 0 0 0 12 2c-.5 0-1 .04-1.47.12l-.34 2.2c-.7.2-1.38.48-2.02.84L6.38 3.83a9.3 9.3 0 0 0-2.08 2.08l1.33 1.79c-.36.64-.64 1.33-.84 2.02l-2.2.34A8.7 8.7 0 0 0 2 12c0 .5.04 1 .12 1.47l2.2.34c.2.7.48 1.38.84 2.02l-1.33 1.79a9.3 9.3 0 0 0 2.08 2.08l1.79-1.33c.64.36 1.33.64 2.02.84l.34 2.2c.48.08.98.12 1.47.12s1-.04 1.47-.12l.34-2.2c.7-.2 1.38-.48 2.02-.84l1.79 1.33a9.3 9.3 0 0 0 2.08-2.08l-1.33-1.79c.36-.64.64-1.33.84-2.02l2.2-.34c.08-.48.12-.98.12-1.47Z" />
